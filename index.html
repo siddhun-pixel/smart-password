@@ -3,57 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <title>Smart Password Strength Checker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f2f2f2;
-    }
-    h2 {
-      color: #333;
-    }
-    input, button, select {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .output {
-      margin-top: 10px;
-      padding: 10px;
-      background: #e0f7fa;
-      color: #00796b;
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <div class="container">
+    <h2>🔐 Smart Password Strength Checker</h2>
 
-  <h2>🔐 Smart Password Strength Checker</h2>
+    <input type="text" id="passwordInput" placeholder="Enter or generate password">
+    <button onclick="checkStrength()">Check Strength</button>
 
-  <input type="text" id="passwordInput" placeholder="Enter or generate password">
-  
-  <button onclick="checkStrength()">Check Strength</button>
+    <div class="strength-bar">
+      <div class="strength-fill" id="strength-fill"></div>
+    </div>
+    <div class="result-text" id="result-text"></div>
 
-  <h3>Generate Password</h3>
-  <label>Password Length:</label>
-  <input type="number" id="length" value="12" min="8" max="20">
-  <label><input type="checkbox" id="digits" checked> Include Digits</label>
-  <label><input type="checkbox" id="symbols" checked> Include Symbols</label>
-  <button onclick="generatePassword()">Generate Password</button>
+    <h3>Generate Password</h3>
+    <label>Password Length:</label>
+    <input type="number" id="length" value="12" min="8" max="20">
+    <label><input type="checkbox" id="digits" checked> Include Digits</label>
+    <label><input type="checkbox" id="symbols" checked> Include Symbols</label>
+    <button onclick="generatePassword()">Generate Password</button>
 
-  <div class="output" id="output"></div>
+    <div class="output" id="output"></div>
+  </div>
 
   <script>
+    const passwordInput = document.getElementById("passwordInput");
+    const strengthFill = document.getElementById("strength-fill");
+    const resultText = document.getElementById("result-text");
+
     function checkStrength() {
-      const password = document.getElementById('passwordInput').value;
+      const password = passwordInput.value;
       fetch('/check', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({password})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
       })
       .then(res => res.json())
       .then(data => {
-        document.getElementById('output').innerText = Strength: ${data.strength}\nTips:\n${data.tips.join('\\n')};
+        strengthFill.className = "strength-fill";
+        strengthFill.style.width = "0%";
+        resultText.textContent = "";
+
+        if (data.strength === "Weak") {
+          strengthFill.classList.add("weak");
+          resultText.textContent = "Weak Password";
+        } else if (data.strength === "Moderate") {
+          strengthFill.classList.add("medium");
+          resultText.textContent = "Moderate Password";
+        } else if (data.strength === "Strong") {
+          strengthFill.classList.add("strong");
+          resultText.textContent = "Strong Password";
+        }
+
+        document.getElementById("output").innerText = "Tips:\n" + data.tips.join('\n');
       });
     }
 
@@ -64,17 +67,15 @@
 
       fetch('/generate', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({length, digits, symbols})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ length, digits, symbols })
       })
       .then(res => res.json())
       .then(data => {
-        document.getElementById('passwordInput').value = data.password;
-        document.getElementById('output').innerText = `Strength: ${data.strength}\nTips:\n${data.tips.join('\n')}`;
-
+        passwordInput.value = data.password;
+        document.getElementById("output").innerText = 'Generated password copied.';
       });
     }
   </script>
-
 </body>
 </html>

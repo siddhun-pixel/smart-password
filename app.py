@@ -1,7 +1,10 @@
+from flask import Flask, render_template, request, jsonify
 import string
 import random
 
-# Breached passwords list
+app = Flask(__name__)
+
+# Common breached passwords
 breached_words = ["password", "123456", "admin", "qwerty", "letmein"]
 
 def generate_password(length=12, use_digits=True, use_symbols=True):
@@ -52,34 +55,25 @@ def check_strength(pw):
     else:
         return "Strong", suggestions
 
-# --- CLI Interface ---
-def main():
-    while True:
-        print("\n--- Smart Password Checker ---")
-        print("1. Generate Password")
-        print("2. Check Password Strength")
-        print("3. Exit")
+@app.route('/')
+def index():
+    return render_template("index.html")
 
-        choice = input("Enter your choice: ")
+@app.route('/check', methods=['POST'])
+def check():
+    data = request.get_json()
+    pw = data.get("password", "")
+    strength, tips = check_strength(pw)
+    return jsonify({"strength": strength, "tips": tips})
 
-        if choice == "1":
-            length = int(input("Enter password length (8-20): "))
-            use_digits = input("Include digits? (y/n): ").lower() == "y"
-            use_symbols = input("Include symbols? (y/n): ").lower() == "y"
-            pw = generate_password(length, use_digits, use_symbols)
-            print("Generated Password:", pw)
-        elif choice == "2":
-            pw = input("Enter password to check: ")
-            strength, suggestions = check_strength(pw)
-            print("Strength:", strength)
-            if suggestions:
-                print("Suggestions:")
-                for s in suggestions:
-                    print(s)
-        elif choice == "3":
-            break
-        else:
-            print("Invalid choice!")
+@app.route('/generate', methods=['POST'])
+def generate():
+    data = request.get_json()
+    length = int(data.get("length", 12))
+    use_digits = data.get("digits", True)
+    use_symbols = data.get("symbols", True)
+    password = generate_password(length, use_digits, use_symbols)
+    return jsonify({"password": password})
 
-if __name__ == "__main__":
-  main()
+if __name__ == '__main__':
+    app.run(debug=True)
