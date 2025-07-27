@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Password Strength Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    h2 {
+      color: #333;
+    }
+    input, button, select {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .output {
+      margin-top: 10px;
+      padding: 10px;
+      background: #e0f7fa;
+      color: #00796b;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔐 Smart Password Strength Checker</h2>
+
+  <input type="text" id="passwordInput" placeholder="Enter or generate password">
+  
+  <button onclick="checkStrength()">Check Strength</button>
+
+  <h3>Generate Password</h3>
+  <label>Password Length:</label>
+  <input type="number" id="length" value="12" min="8" max="20">
+  <label><input type="checkbox" id="digits" checked> Include Digits</label>
+  <label><input type="checkbox" id="symbols" checked> Include Symbols</label>
+  <button onclick="generatePassword()">Generate Password</button>
+
+  <div class="output" id="output"></div>
+
+  <script>
+    function checkStrength() {
+      const password = document.getElementById('passwordInput').value;
+      fetch('/check', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password})
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('output').innerText = Strength: ${data.strength}\nTips:\n${data.tips.join('\\n')};
+      });
+    }
+
+    function generatePassword() {
+      const length = parseInt(document.getElementById('length').value);
+      const digits = document.getElementById('digits').checked;
+      const symbols = document.getElementById('symbols').checked;
+
+      fetch('/generate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({length, digits, symbols})
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('passwordInput').value = data.password;
+        document.getElementById('output').innerText = `Strength: ${data.strength}\nTips:\n${data.tips.join('\n')}`;
+
+      });
+    }
+  </script>
+
+</body>
+</html>
